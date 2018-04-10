@@ -4,7 +4,7 @@ import os
 import cv2
 import pickle
 
-from dataset.awe_dataset import prepareDataset
+from awe_dataset import prepareDataset
 
 
 class DatasetAugmentation(object):
@@ -83,19 +83,21 @@ class DatasetAugmentation(object):
 
 
 if __name__ == "__main__":
-    train_data, test_data = prepareDataset("/Users/dejanstepec/awe_capsules/CapsNet-pytorch/dataset/awe")
+    print("Starting data augmentation...")
+    train_data, test_data = prepareDataset("dataset/awe/")
 
     # car plates
     dataset = DatasetAugmentation(train_data,
-                                  "/Users/dejanstepec/awe_capsules/CapsNet-pytorch/dataset/awe_train_aug",
+                                  "dataset/awe_train_aug",
                                   data_type="awe1",
-                                  n_augment=10,
+                                  n_augment=100,
                                   DEBUG=False)
 
     train_data_aug = dataset.augment_data()
 
-    with open("train_data_aug.pkl", "wb") as f:
+    print("Writing data files using pickle...")
+    with open("dataset/train_data_aug.pkl", "wb") as f:
         pickle.dump(train_data_aug, f)
 
-    with open("test_data.pkl", "wb") as f:
+    with open("dataset/test_data.pkl", "wb") as f:
         pickle.dump(test_data, f)

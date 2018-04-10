@@ -203,9 +203,7 @@ if __name__ == '__main__':
     print("Number of testing images: ", len(test_data))
 
     print("Normalization parameters:")
-    mean_img, std_img, mean_c, std_c = compute_normalization(train_data)
-    print(mean_img.shape)
-    print(std_img.shape)
+    mean_c, std_c = compute_normalization(train_data)
     print(mean_c)
     print(std_c)
 
@@ -216,13 +214,13 @@ if __name__ == '__main__':
                                                    batch_size=args.batch_size,
                                                    shuffle=False, **kwargs)
 
-    awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(train_data, transformations),
+    """awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(train_data, transformations),
                                                    batch_size=args.batch_size,
-                                                   shuffle=False, **kwargs)
+                                                   shuffle=False, **kwargs)"""
 
-    """awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(test_data, transformations),
+    awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(test_data, transformations),
                                                   batch_size=args.test_batch_size,
-                                                  shuffle=False, **kwargs)"""
+                                                  shuffle=False, **kwargs)
 
     model = CapsNet(args.routing_iterations, n_classes=args.n_classes)
 

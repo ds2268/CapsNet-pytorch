@@ -26,25 +26,28 @@ def prepareDataset(dataset_path, split_ratio=0.2, ext="png"):
 
 
 def compute_normalization(train_data, size=(128, 128)):
-    images = []
+    meanR = 0
+    meanG = 0
+    meanB = 0
+    stdR = 0
+    stdG = 0
+    stdB = 0
+    idx = 0
     for img_path in train_data:
+        if idx % 1000 == 0:
+            print("Processed %d images" % idx)
         I = imread(img_path, mode="RGB")
-        I = imresize(I, size)
-        images.append(np.expand_dims(I / 255, 0))
-    images = np.concatenate(tuple(images), 0)
+        I = imresize(I, size) / 255.0
+        meanR += np.mean(I[:, :, 0].flatten())
+        meanG += np.mean(I[:, :, 1].flatten())
+        meanB += np.mean(I[:, :, 2].flatten())
 
-    mean_image = np.mean(images, axis=0)
-    std_image = np.std(images, axis=0)
+        stdR += np.std(I[:, :, 0].flatten())
+        stdG += np.std(I[:, :, 1].flatten())
+        stdB += np.std(I[:, :, 2].flatten())
+        idx += 1
 
-    meanR = np.mean(images[:, :, :, 0].flatten())
-    meanG = np.mean(images[:, :, :, 1].flatten())
-    meanB = np.mean(images[:, :, :, 2].flatten())
-
-    stdR = np.std(images[:, :, :, 0].flatten())
-    stdG = np.std(images[:, :, :, 1].flatten())
-    stdB = np.std(images[:, :, :, 2].flatten())
-
-    return mean_image, std_image, (meanR, meanG, meanB), (stdR, stdG, stdB)
+    return (meanR/len(train_data), meanG/len(train_data), meanB/len(train_data)), (stdR/len(train_data), stdG/len(train_data), stdB/len(train_data))
 
 
 class AWEDataset(Dataset):
