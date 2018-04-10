@@ -7,6 +7,7 @@ import math
 
 from torch.optim import lr_scheduler
 from torch.autograd import Variable
+import pickle
 
 from dataset.awe_dataset import prepareDataset, compute_normalization, AWEDataset
 
@@ -195,8 +196,14 @@ if __name__ == '__main__':
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-    train_data, test_data = prepareDataset("/Users/dejanstepec/awe_capsules/CapsNet-pytorch/dataset/awe")
+    with open("dataset/train_data_aug.pkl", "rb") as train_data_f, open("dataset/test_data.pkl", "rb") as test_data_f:
+        train_data = pickle.load(train_data_f)
+        test_data = pickle.load(test_data_f)
 
+    print("Number of training images: ", len(train_data))
+    print("Number of testing images: ", len(test_data))
+
+    print("Normalization parameters:")
     mean_img, std_img, mean_c, std_c = compute_normalization(train_data)
     print(mean_img.shape)
     print(std_img.shape)
