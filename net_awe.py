@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import math
 
 from torch.optim import lr_scheduler
-from torch.autograd import Variable
 import pickle
 
 from dataset.awe_dataset import prepareDataset, compute_normalization, AWEDataset
@@ -94,7 +93,7 @@ class CapsNet(nn.Module):
         super(CapsNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 256, kernel_size=9, stride=1)
         self.primaryCaps = PrimaryCapsLayer(256, 32, 8, kernel_size=9, stride=2)  # outputs 6*6
-        self.num_primaryCaps = 32 * 6 * 6
+        self.num_primaryCaps = 12800
         routing_module = AgreementRouting(self.num_primaryCaps, n_classes, routing_iterations)
         self.digitCaps = CapsLayer(self.num_primaryCaps, 8, n_classes, 16, routing_module)
 
@@ -108,11 +107,11 @@ class CapsNet(nn.Module):
 
 
 class ReconstructionNet(nn.Module):
-    def __init__(self, n_dim=16, n_classes=10):
+    def __init__(self, n_dim=16, n_classes=10, n_out=784):
         super(ReconstructionNet, self).__init__()
         self.fc1 = nn.Linear(n_dim * n_classes, 512)
         self.fc2 = nn.Linear(512, 1024)
-        self.fc3 = nn.Linear(1024, 784)
+        self.fc3 = nn.Linear(1024, n_out)
         self.n_dim = n_dim
         self.n_classes = n_classes
 
@@ -169,7 +168,7 @@ if __name__ == '__main__':
 
     # Training settings
     parser = argparse.ArgumentParser(description='CapsNet with AWE')
-    parser.add_argument('--batch-size', type=int, default=2, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=8, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1, metavar='N',
                         help='input batch size for testing (default: 1000)')
@@ -210,25 +209,26 @@ if __name__ == '__main__':
     print(mean_c)
     print(std_c)
 
-    transformations = transforms.Compose([transforms.Resize((28, 28)), transforms.ToTensor(),
+    transformations = transforms.Compose([transforms.Resize((56, 56)), transforms.ToTensor(),
                                           transforms.Normalize(mean_c, std_c)])
 
     awe_train_loader = torch.utils.data.DataLoader(dataset=AWEDataset(train_data, transformations),
                                                    batch_size=args.batch_size,
                                                    shuffle=False, **kwargs)
 
-    """awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(train_data, transformations),
+    awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(train_data, transformations),
                                                    batch_size=args.batch_size,
-                                                   shuffle=False, **kwargs)"""
+                                                   shuffle=False, **kwargs)
 
-    awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(test_data, transformations),
+    """awe_test_loader = torch.utils.data.DataLoader(dataset=AWEDataset(test_data, transformations),
                                                   batch_size=args.test_batch_size,
-                                                  shuffle=False, **kwargs)
+                                                  shuffle=False, **kwargs)"""
 
     model = CapsNet(args.routing_iterations, n_classes=args.n_classes)
 
     if args.with_reconstruction:
-        reconstruction_model = ReconstructionNet(16, n_classes=args.n_classes)
+        print("Initializing reconstruction net...")
+        reconstruction_model = ReconstructionNet(16, n_classes=args.n_classes, n_out=56*56*3)
         reconstruction_alpha = 0.0005
         model = CapsNetWithReconstruction(model, reconstruction_model)
 
@@ -248,7 +248,7 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             if args.with_reconstruction:
                 output, probs = model(data, target)
-                reconstruction_loss = F.mse_loss(output, data.view(-1, 784))
+                reconstruction_loss = F.mse_loss(output, data.view(-1, 56*56*3))
                 margin_loss = loss_fn(probs, target)
                 loss = reconstruction_alpha * reconstruction_loss + margin_loss
             else:

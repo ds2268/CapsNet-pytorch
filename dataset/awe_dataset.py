@@ -5,7 +5,7 @@ from random import shuffle
 import os
 from scipy.misc import imread, imsave, toimage, imresize
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 def prepareDataset(dataset_path, split_ratio=0.2, ext="png"):
