@@ -5,20 +5,21 @@ from random import shuffle
 import os
 from scipy.misc import imread, imsave, toimage, imresize
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 def prepareDataset(dataset_path, split_ratio=0.2, ext="png"):
-    all_data = []
+    train_data = []
+    test_data=[]
     for subdir, dirs, files in os.walk(dataset_path):
+        all_data = []
         for file in files:
             if file.endswith(ext):
                 all_data.append(os.path.join(subdir, file))
-
-    shuffle(all_data)
-    test_idx = int(split_ratio * len(all_data))
-    test_data = all_data[0:test_idx]
-    train_data = all_data[test_idx:]
+        shuffle(all_data)
+        test_idx = int(split_ratio * len(all_data))
+        test_data += all_data[0:test_idx]
+        train_data += all_data[test_idx:]
 
     return train_data, test_data
 
